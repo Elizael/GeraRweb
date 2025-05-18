@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GeraR WebView Integrado</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f2f5f9; margin: 0; padding: 20px; }
+    .container {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    h1 { text-align: center; color: #2e6de0; }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input[type="file"], button {
+      width: 100%; padding: 10px; margin-top: 5px;
+      border-radius: 6px; border: 1px solid #ccc;
+    }
+    button {
+      background: #2e6de0; color: white;
+      font-weight: bold; border: none;
+      cursor: pointer;
+    }
+    button:hover { background: #2358b5; }
+    .meses {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px 8px;
+      margin-top: 10px;
+    }
+    .meses label {
+      font-weight: normal;
+      font-size: 14px;
+    }
+    .btn-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>GeraR Web</h1>
+    <form id="formulario" enctype="multipart/form-data">
+      <label>Enviar planilhas</label>
+      <input type="file" name="files[]" multiple required />
+
+      <label>Modelo Word (.docx)</label>
+      <input type="file" name="modelo" required />
+
+      <label>Selecionar meses</label>
+      <div class="meses">
+        <label><input type="checkbox" name="meses[]" value="jan"> Jan</label>
+        <label><input type="checkbox" name="meses[]" value="fev"> Fev</label>
+        <label><input type="checkbox" name="meses[]" value="mar"> Mar</label>
+        <label><input type="checkbox" name="meses[]" value="abr"> Abr</label>
+        <label><input type="checkbox" name="meses[]" value="mai"> Mai</label>
+        <label><input type="checkbox" name="meses[]" value="jun"> Jun</label>
+        <label><input type="checkbox" name="meses[]" value="jul"> Jul</label>
+        <label><input type="checkbox" name="meses[]" value="ago"> Ago</label>
+        <label><input type="checkbox" name="meses[]" value="set"> Set</label>
+        <label><input type="checkbox" name="meses[]" value="out"> Out</label>
+        <label><input type="checkbox" name="meses[]" value="nov"> Nov</label>
+        <label><input type="checkbox" name="meses[]" value="dez"> Dez</label>
+      </div>
+
+      <div class="btn-group">
+        <button type="button" onclick="gerar('docx')">Gerar Word</button>
+      </div>
+    </form>
+
+    <div id="loading" style="display:none; margin-top:15px; text-align:center;">
+      <p>🔄 Gerando arquivos, aguarde...</p>
+    </div>
+    <div id="sucesso" style="display:none; margin-top:15px; text-align:center; color:green;">
+      <p>✅ Relatórios gerados com sucesso!</p>
+    </div>
+    <script>
+      function gerar(formato) {
+        const form = document.getElementById("formulario");
+        const formData = new FormData(form);
+        formData.append("formato", formato);
+
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('sucesso').style.display = 'none';
+
+        fetch("http://localhost:5000/gerar", {
+          method: "POST",
+          body: formData
+        })
+        .then(response => {
+          if (!response.ok) throw new Error("Falha ao gerar.");
+          return response.blob();
+        })
+        .then(blob => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "relatorios.zip";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('sucesso').style.display = 'block';
+        })
+        .catch(() => {
+          alert("Erro ao gerar os relatórios.");
+          document.getElementById('loading').style.display = 'none';
+        });
+      }
+    </script>
+  </div>
+</body>
+</html>
